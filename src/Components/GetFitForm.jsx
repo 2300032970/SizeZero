@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const GetFitForm = () => {
   const [formData, setFormData] = useState({
@@ -17,30 +18,28 @@ const GetFitForm = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const calculateBMR = (gender, weight, height, age) => {
-    if (gender === 'male') {
-      return 10 * weight + 6.25 * height - 5 * age + 5;
-    } else if (gender === 'female') {
-      return 10 * weight + 6.25 * height - 5 * age - 161;
-    }
-    return 0;
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const { gender, weight, height, age, goalWeight } = formData;
-    const bmr = calculateBMR(gender, Number(weight), Number(height), Number(age));
+    const { name, age, gender, height, weight, goalWeight } = formData;
+    
+    const dataToSend = {
+      name: name,
+      age: Number(age),
+      gender: gender,
+      height: Number(height),
+      weight: Number(weight),
+      goalWeight: Number(goalWeight),
+    };
 
-    let dailyCalories = bmr;
-
-    if (Number(goalWeight) < Number(weight)) {
-      dailyCalories -= 500;
-    } else if (Number(goalWeight) > Number(weight)) {
-      dailyCalories += 500;
+    try {
+      const response = await axios.post('http://localhost:8080/api/fitness-data', dataToSend);
+      console.log('Server response:', response.data);
+      // Logic for calorie calculation and redirection
+      navigate('/calories');
+    } catch (error) {
+      console.error('Error saving fitness data:', error);
+      alert('Failed to save data. Please try again.');
     }
-
-    localStorage.setItem('dailyCalories', dailyCalories.toFixed(0));
-    navigate('/calories');
   };
 
   return (
